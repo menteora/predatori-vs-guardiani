@@ -1,0 +1,5 @@
+{
+  "name": "Predatori vs Guardiani - Master Tool",
+  "description": "A digital assistant for the Master to manage the game flow, track player status, and calculate scores for the physical card game 'Predatori vs Guardiani'.",
+  "requestFramePermissions": []
+}
