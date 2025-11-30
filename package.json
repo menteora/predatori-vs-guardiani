@@ -4,7 +4,7 @@
   "description": "Master Tool & Multiplayer Game",
   "main": "index.tsx",
   "scripts":{
-    "build":"vite build",
+    "build":"vite build"
   }
   "dependencies": {
     "react": "^18.2.0",
