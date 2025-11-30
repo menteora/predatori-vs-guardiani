@@ -1,20 +1,48 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Predatori vs Guardiani - Master Tool
 
-# Run and deploy your AI Studio app
+Un assistente digitale per il gioco di carte fisico "Predatori vs Guardiani". Questa applicazione permette al Master di gestire il flusso di gioco, i ruoli e lo stato dei giocatori in una partita multiplayer locale o remota.
 
-This contains everything you need to run your app locally.
+## Funzionalità
 
-View your app in AI Studio: https://ai.studio/apps/drive/13tey3X4Iuon5n59tuvOKPB2ucJ4skWmt
+- **Multiplayer Realtime**: I giocatori si uniscono scansionando un QR code o cliccando un link.
+- **Gestione Ruoli**: Assegnazione casuale automatica (Predatore/Guardiano).
+- **Flusso Guidato**: Script fase Alba, gestione Giorno/Notte, votazioni.
+- **Serverless**: Backend gestito tramite Supabase (Database + Realtime).
 
-## Run Locally
+## Configurazione Iniziale (Supabase)
 
-**Prerequisites:**  Node.js
+L'app richiede un progetto Supabase per funzionare.
 
+1. Crea un nuovo progetto su [Supabase](https://supabase.com).
+2. Vai nell'app, clicca l'icona **Impostazioni** (ingranaggio).
+3. Copia lo script SQL mostrato e eseguilo nell'**SQL Editor** di Supabase per creare le tabelle.
+4. Nelle impostazioni del progetto Supabase (API), copia:
+   - **Project URL**
+   - **Anon / Public Key**
+5. Inseriscili nell'app per collegarla.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Installazione Locale
+
+```bash
+# Installa le dipendenze
+npm install
+
+# Avvia il server di sviluppo
+npm run dev
+```
+
+## Build & Deploy
+
+Per creare la versione di produzione:
+
+```bash
+npm run build
+```
+
+La cartella `dist` conterrà i file statici pronti per essere caricati su GitHub Pages, Netlify o Vercel.
+
+## Stack Tecnologico
+
+- **Frontend**: React, TypeScript, TailwindCSS (via CDN per semplicità V1).
+- **Build Tool**: Vite.
+- **Backend**: Supabase (PostgreSQL + Realtime).

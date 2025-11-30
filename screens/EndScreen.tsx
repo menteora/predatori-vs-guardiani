@@ -10,7 +10,7 @@ export const EndScreen: React.FC = () => {
   const { winner, guardianCount, players, resetGame } = useGame();
 
   const isPredatorWin = winner === Winner.PREDATORS;
-  const aliveGuardians = players.filter(p => p.isAlive).length; // Rough estimate, technically we don't know roles
+  const aliveGuardians = players.filter(p => p.is_alive).length; // Rough estimate, technically we don't know roles
   
   // Note: Since the app doesn't know who is who (roles were physical), 
   // we display the calculation logic rather than the final leaderboard.
