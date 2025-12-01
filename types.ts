@@ -54,6 +54,7 @@ export interface GameContextType {
   isHost: boolean;
   isLoading: boolean;
   error: string | null;
+  clientId: string;
 
   // Actions
   configureServer: (url: string, key: string) => void;

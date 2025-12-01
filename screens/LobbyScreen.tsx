@@ -7,7 +7,7 @@ import { Users, Play, Copy, Share2, LogOut } from 'lucide-react';
 import { getSupabaseConfig } from '../lib/supabase';
 
 export const LobbyScreen: React.FC = () => {
-  const { roomCode, players, isHost, startGame, leaveGame } = useGame();
+  const { roomCode, players, isHost, startGame, leaveGame, clientId } = useGame();
 
   const handleShare = () => {
     const config = getSupabaseConfig();
@@ -96,10 +96,13 @@ export const LobbyScreen: React.FC = () => {
         )}
       </Card>
 
-      <div className="mt-4 pb-4 text-center">
+      <div className="mt-4 pb-4 text-center space-y-2">
         <button onClick={leaveGame} className="text-slate-500 hover:text-red-400 text-sm flex items-center justify-center gap-2 mx-auto transition-colors">
           <LogOut size={16} /> Esci dalla stanza
         </button>
+        <div className="text-[10px] text-slate-700 font-mono">
+            Client ID: {clientId.split('-')[0]}...
+        </div>
       </div>
     </Container>
   );

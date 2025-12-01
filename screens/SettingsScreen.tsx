@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../components/Button';
 import { Container } from '../components/Container';
 import { Card } from '../components/Card';
-import { ArrowLeft, Save, Copy, Check, Upload, Download } from 'lucide-react';
+import { ArrowLeft, Save, Copy, Check, Upload, Download, Smartphone } from 'lucide-react';
 import { getSupabaseConfig } from '../lib/supabase';
 import { useGame } from '../GameContext';
 
@@ -42,11 +42,12 @@ create policy "Public access for players" on public.players for all using (true)
 `;
 
 export const SettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const { configureServer } = useGame();
+  const { configureServer, clientId } = useGame();
   const config = getSupabaseConfig();
   const [url, setUrl] = useState(config.url);
   const [key, setKey] = useState(config.key);
   const [copied, setCopied] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
 
   const handleSave = () => {
     configureServer(url, key);
@@ -58,6 +59,12 @@ export const SettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const copyId = () => {
+    navigator.clipboard.writeText(clientId);
+    setIdCopied(true);
+    setTimeout(() => setIdCopied(false), 2000);
+  }
 
   const handleExport = () => {
     if (!url || !key) {
@@ -121,6 +128,21 @@ export const SettingsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       </header>
 
       <div className="space-y-6 pb-8">
+        <Card title="Info Dispositivo">
+          <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 text-slate-300">
+                <Smartphone size={18} />
+                <span className="text-sm font-mono">{clientId.substring(0, 8)}...</span>
+             </div>
+             <button onClick={copyId} className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded border border-slate-700">
+                {idCopied ? 'Copiato!' : 'Copia ID Completo'}
+             </button>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-2">
+            Usa questo ID se devi debuggare problemi di connessione multipla dallo stesso browser.
+          </p>
+        </Card>
+
         <Card title="1. Configurazione Database">
           <p className="text-sm text-slate-400 mb-4">
             Crea un progetto su <a href="https://supabase.com" target="_blank" className="text-indigo-400 underline">supabase.com</a>, vai nell'SQL Editor ed esegui questo script per creare le tabelle:
