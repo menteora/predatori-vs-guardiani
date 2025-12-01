@@ -68,11 +68,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
     }
 
+    console.log(`[Realtime] Subscribing to room ${roomCode}`);
+
     // Subscribe to Room updates
-    // IMPORTANT: usage of 'supabase' here relies on the live binding from lib/supabase
     const roomChannel = supabase
       .channel(`room:${roomCode}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `code=eq.${roomCode}` }, (payload) => {
+        console.log('[Realtime] Room updated:', payload.new);
         setRoomState(payload.new as Room);
       })
       .subscribe((status) => {
@@ -87,6 +89,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const playerChannel = supabase
       .channel(`players:${roomCode}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `room_code=eq.${roomCode}` }, () => {
+        console.log('[Realtime] Players table changed, refreshing list...');
         refreshPlayers(roomCode);
       })
       .subscribe();
@@ -287,6 +290,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       isHost,
       isLoading,
       error,
+      clientId, // Exposed Client ID
       configureServer,
       createGame,
       joinGame,
