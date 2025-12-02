@@ -169,17 +169,29 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     setError(null);
     try {
-      // Check if room exists
+      // 1. Check if room exists
       const { data: room, error: roomCheckError } = await supabase.from('rooms').select('code').eq('code', code).single();
       if (roomCheckError || !room) throw new Error("Stanza non trovata o connessione fallita");
 
-      // Join
-      const { error: joinError } = await supabase.from('players').upsert({
+      // 2. Check if I am ALREADY in the room (re-joining)
+      const { data: existingPlayer } = await supabase
+        .from('players')
+        .select('is_host, role, is_alive')
+        .eq('room_code', code)
+        .eq('id', clientId)
+        .maybeSingle();
+
+      // 3. Prepare payload: preserve host status/role if existing, otherwise default
+      const playerPayload = {
         id: clientId,
         room_code: code,
         name: name,
-        is_host: false
-      });
+        is_host: existingPlayer ? existingPlayer.is_host : false,
+        role: existingPlayer ? existingPlayer.role : Role.UNKNOWN,
+        is_alive: existingPlayer ? existingPlayer.is_alive : true
+      };
+
+      const { error: joinError } = await supabase.from('players').upsert(playerPayload);
 
       if (joinError) throw joinError;
 

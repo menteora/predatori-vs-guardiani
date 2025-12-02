@@ -1,12 +1,16 @@
-export const MIN_PLAYERS = 6;
+export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 16;
 
 export const calculateRoles = (totalPlayers: number) => {
   // Logic: Roughly 1 predator for every 3-4 players, or standard specific breakdown
+  // 3-5 players: 1 Predator (Test Mode)
   // 6-8 players: 2 Predators
   // 9-12 players: 3 Predators
   // 13+ players: 4 Predators
-  let predators = 2;
+  
+  let predators = 1;
+  
+  if (totalPlayers >= 6) predators = 2;
   if (totalPlayers >= 9) predators = 3;
   if (totalPlayers >= 13) predators = 4;
   
