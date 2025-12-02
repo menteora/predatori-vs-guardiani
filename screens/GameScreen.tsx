@@ -3,7 +3,7 @@ import { useGame } from '../GameContext';
 import { Button } from '../components/Button';
 import { Container } from '../components/Container';
 import { GamePhase, Player, Winner, Role } from '../types';
-import { Sun, Moon, Skull, CheckCircle, RotateCcw, Award, EyeOff, Eye, ShieldCheck, Ghost } from 'lucide-react';
+import { Sun, Moon, Skull, CheckCircle, RotateCcw, Award, EyeOff, Eye, ShieldCheck, Ghost, User } from 'lucide-react';
 
 const PlayerRow: React.FC<{ 
   player: Player; 
@@ -15,9 +15,15 @@ const PlayerRow: React.FC<{
   currentUserId: string | undefined;
 }> = ({ player, onKill, onRevive, phase, showRoles, isHost, currentUserId }) => {
   
-  // Logic: Show role IF (it is ME) OR (Host has toggled showRoles)
+  // Logic: 
+  // - Host sees role IF showRoles is true.
+  // - Player sees NO roles in list (only their own in the top card, redundant here).
+  // - Everyone sees alive/dead status.
+  
   const isMe = player.id === currentUserId;
-  const isRoleVisible = isMe || showRoles;
+  // Role is visible ONLY if (Host AND toggled ON) OR (It's me - optional, usually hidden in list to avoid shoulder surfing).
+  // Let's decide: In list, ONLY HOST sees roles. Player sees roles only in their private card.
+  const isRoleVisible = isHost && showRoles;
 
   return (
     <div className={`
@@ -27,20 +33,18 @@ const PlayerRow: React.FC<{
         : 'bg-slate-900/50 border-slate-800 opacity-60 grayscale'}
     `}>
       <div className="flex items-center gap-3 overflow-hidden flex-1">
-        {/* Role Icon or Status Bar */}
+        {/* Avatar / Role Icon */}
         <div className={`
-          w-8 h-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-colors
+          w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center transition-colors border
           ${!isRoleVisible 
-             ? (player.is_alive ? 'bg-slate-700 text-slate-500' : 'bg-red-900/50 text-red-900') 
-             : (player.role === Role.PREDATOR ? 'bg-indigo-900/50 text-indigo-400 border border-indigo-500/30' : 'bg-red-900/30 text-red-400 border border-red-500/30')
+             ? (player.is_alive ? 'bg-slate-700 border-slate-600 text-slate-400' : 'bg-red-900/20 border-red-900/50 text-red-900') 
+             : (player.role === Role.PREDATOR ? 'bg-indigo-900/50 border-indigo-500/50 text-indigo-400' : 'bg-red-900/30 border-red-500/50 text-red-400')
           }
         `}>
            {!isRoleVisible ? (
-             <div className={`w-1 h-full rounded-full ${player.is_alive ? 'bg-slate-600' : 'bg-red-900'}`}></div>
+             player.is_alive ? <User size={20} /> : <Skull size={20} />
            ) : (
-             player.role === Role.PREDATOR 
-               ? <Ghost size={18} /> 
-               : <ShieldCheck size={18} />
+             player.role === Role.PREDATOR ? <Ghost size={20} /> : <ShieldCheck size={20} />
            )}
         </div>
 
@@ -48,6 +52,7 @@ const PlayerRow: React.FC<{
           <span className={`font-medium truncate ${player.is_alive ? 'text-slate-100' : 'text-slate-500 line-through'}`}>
             {player.name} {isMe && '(Tu)'}
           </span>
+          {/* Only Host sees text role in list */}
           {isRoleVisible && (
             <span className={`text-[10px] font-bold uppercase tracking-wider ${player.role === Role.PREDATOR ? 'text-indigo-400' : 'text-red-400'}`}>
               {player.role === Role.PREDATOR ? 'Predatore' : 'Guardiano'}
@@ -85,6 +90,47 @@ const PlayerRow: React.FC<{
   );
 };
 
+const RoleCard: React.FC<{ role: Role }> = ({ role }) => {
+  const [revealed, setRevealed] = useState(false);
+  const isPredator = role === Role.PREDATOR;
+
+  return (
+    <div 
+      onClick={() => setRevealed(!revealed)}
+      className={`
+        mb-6 rounded-xl border-2 cursor-pointer transition-all duration-300 relative overflow-hidden shadow-lg
+        ${revealed 
+          ? (isPredator ? 'bg-indigo-950 border-indigo-500 shadow-indigo-900/50' : 'bg-red-950 border-red-500 shadow-red-900/50') 
+          : 'bg-slate-900 border-slate-700 hover:border-slate-500'}
+      `}
+    >
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${revealed ? (isPredator ? 'bg-indigo-500/20' : 'bg-red-500/20') : 'bg-slate-800'}`}>
+            {!revealed ? <EyeOff size={24} className="text-slate-400" /> : (isPredator ? <Ghost size={28} className="text-indigo-400" /> : <ShieldCheck size={28} className="text-red-400" />)}
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Il tuo Ruolo</h3>
+            <p className={`font-bold text-lg ${revealed ? 'text-white' : 'text-slate-500 blur-sm'}`}>
+              {revealed ? (isPredator ? 'PREDATORE' : 'GUARDIANO') : 'Tocca per vedere'}
+            </p>
+          </div>
+        </div>
+        <div className="text-xs text-slate-500">
+           {revealed ? (isPredator ? 'Nascondi' : 'Nascondi') : 'Rivela'}
+        </div>
+      </div>
+      {revealed && (
+        <div className={`px-4 pb-4 text-xs ${isPredator ? 'text-indigo-300' : 'text-red-300'}`}>
+           {isPredator 
+             ? "Durante la Notte, apri gli occhi e scegli una vittima insieme agli altri Predatori."
+             : "Sei un cittadino. Cerca di individuare i Predatori durante il Giorno."}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const GameScreen: React.FC = () => {
   const { 
     gamePhase, 
@@ -99,7 +145,7 @@ export const GameScreen: React.FC = () => {
   } = useGame();
 
   const [showEndModal, setShowEndModal] = useState(false);
-  const [showRoles, setShowRoles] = useState(false); // Only host can toggle for everyone? Or local view? Let's make it local view for Host.
+  const [showRoles, setShowRoles] = useState(false); 
 
   const aliveCount = players.filter(p => p.is_alive).length;
   const isDay = gamePhase === GamePhase.DAY;
@@ -107,13 +153,14 @@ export const GameScreen: React.FC = () => {
   return (
     <Container className={isDay ? 'bg-slate-950' : 'bg-[#0f111a]'}>
       {/* Header Info */}
-      <div className="sticky top-0 z-30 pt-4 pb-4 bg-slate-950/95 backdrop-blur border-b border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-30 pt-4 pb-4 bg-slate-950/95 backdrop-blur border-b border-slate-800 -mx-4 px-4 sm:-mx-6 sm:px-6 mb-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
               Turno {roundCount}
             </span>
-            <div className={`px-2 py-0.5 rounded text-xs font-bold border ${isDay ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
+            <div className={`px-2 py-0.5 rounded text-xs font-bold border flex items-center gap-1 ${isDay ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
+              {isDay ? <Sun size={12} /> : <Moon size={12} />}
               {isDay ? 'GIORNO' : 'NOTTE'}
             </div>
           </div>
@@ -125,7 +172,7 @@ export const GameScreen: React.FC = () => {
                 ${showRoles ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
             >
                 {showRoles ? <Eye size={14} /> : <EyeOff size={14} />}
-                {showRoles ? 'Vedi Tutti' : 'Nascondi'}
+                {showRoles ? 'Vedi Ruoli' : 'Nascondi'}
             </button>
           )}
         </div>
@@ -153,50 +200,49 @@ export const GameScreen: React.FC = () => {
                 </Button>
             </div>
         ) : (
-            <div className="p-3 bg-slate-900 rounded-lg text-center text-sm text-slate-400 border border-slate-800">
-                In attesa delle mosse del Master...
+            <div className={`p-3 rounded-lg text-center text-sm border font-medium ${isDay ? 'text-amber-200 border-amber-900/30 bg-amber-900/10' : 'text-indigo-200 border-indigo-900/30 bg-indigo-900/10'}`}>
+                {isDay ? 'Discuti con gli altri.' : 'Attendi il risveglio.'}
             </div>
         )}
       </div>
 
       {/* Main Content Area */}
-      <div className="py-4 space-y-6">
+      <div className="space-y-6">
         
+        {/* PRIVATE ROLE CARD (For Non-Host or even Host if playing) */}
+        {!isHost && currentPlayer && (
+           <RoleCard role={currentPlayer.role} />
+        )}
+
         {/* Phase Rules/Guide */}
         <div className={`
           p-4 rounded-xl border relative overflow-hidden transition-all duration-500
           ${isDay 
-            ? 'bg-gradient-to-br from-amber-900/20 to-slate-900 border-amber-900/30' 
-            : 'bg-gradient-to-br from-indigo-950 to-slate-950 border-indigo-900/50 shadow-lg shadow-indigo-900/20'}
+            ? 'bg-gradient-to-br from-amber-900/10 to-slate-900 border-amber-900/30' 
+            : 'bg-gradient-to-br from-indigo-900/10 to-slate-950 border-indigo-900/30'}
         `}>
-          <div className="relative z-10">
-            <h3 className={`text-lg font-bold mb-2 flex items-center gap-2 ${isDay ? 'text-amber-100' : 'text-indigo-200'}`}>
-              {isDay ? <Sun size={20} className="text-amber-500" /> : <EyeOff size={20} className="text-indigo-400" />}
+            <h3 className={`text-sm font-bold mb-2 flex items-center gap-2 ${isDay ? 'text-amber-100' : 'text-indigo-200'}`}>
               {isDay ? 'Fase Diurna' : 'Notte dei Predatori'}
             </h3>
             
             {isDay ? (
-              <ul className="text-sm text-slate-300 space-y-1.5 list-disc pl-4">
+              <ul className="text-xs text-slate-400 space-y-1 list-disc pl-4">
                 <li>Discussione libera.</li>
                 <li>Chiunque può accusare.</li>
-                <li>Se si vota: il sospettato <strong>non vota</strong>.</li>
               </ul>
             ) : (
-              <div className="space-y-3">
-                <ul className="text-sm text-slate-300 space-y-1.5">
-                  <li className="flex gap-2 items-center"><Ghost size={14} className="text-indigo-400"/> <strong>Predatori:</strong> Indicano una vittima.</li>
-                  <li className="flex gap-2 items-center"><ShieldCheck size={14} className="text-red-400"/> <strong>Guardiani:</strong> Scrivono "Guardiano".</li>
-                </ul>
-              </div>
+              <ul className="text-xs text-slate-400 space-y-1 list-disc pl-4">
+                 <li>I Predatori scelgono una vittima.</li>
+                 <li>I Guardiani restano in silenzio.</li>
+              </ul>
             )}
-          </div>
         </div>
 
         {/* Players List */}
         <div>
           <div className="flex justify-between items-end mb-3 px-1">
              <h4 className="text-slate-500 uppercase text-xs font-bold tracking-wider">
-               Stato Giocatori
+               Giocatori
              </h4>
              <span className="text-xs text-slate-500">
                {aliveCount} Vivi

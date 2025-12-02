@@ -4,14 +4,70 @@ import { Button } from '../components/Button';
 import { Container } from '../components/Container';
 import { Card } from '../components/Card';
 import { DAWN_STEPS } from '../constants';
-import { Moon, Play, CheckCircle2, Eye, EyeOff, Ghost, ShieldCheck } from 'lucide-react';
+import { Moon, Play, CheckCircle2, Eye, EyeOff, Ghost, ShieldCheck, Hourglass } from 'lucide-react';
 import { Role } from '../types';
 
 export const BriefingScreen: React.FC = () => {
-  const { predatorCount, guardianCount, startGame, players } = useGame();
+  const { predatorCount, guardianCount, startGame, players, isHost, currentPlayer } = useGame();
   const [activeStep, setActiveStep] = useState<number>(-1); // -1 means distribution phase
   const [showRoles, setShowRoles] = useState(false);
+  const [revealMyRole, setRevealMyRole] = useState(false);
 
+  // ------------------------------------------------------------------
+  // PLAYER VIEW
+  // ------------------------------------------------------------------
+  if (!isHost) {
+    const myRole = currentPlayer?.role || Role.UNKNOWN;
+    const isPredator = myRole === Role.PREDATOR;
+
+    return (
+      <Container>
+        <div className="flex-1 flex flex-col items-center justify-center space-y-8 animate-in fade-in">
+          <div className="text-center space-y-2">
+             <div className="bg-indigo-500/20 p-4 rounded-full inline-block mb-2">
+                <Hourglass size={48} className="text-indigo-400 animate-pulse" />
+             </div>
+             <h2 className="text-2xl font-bold text-white">Attendi il Master</h2>
+             <p className="text-slate-400">È in corso la fase dell'Alba...</p>
+          </div>
+
+          <Card title="Il tuo Ruolo Segreto" className="w-full max-w-sm border-2 border-indigo-500/30">
+             <div 
+               onClick={() => setRevealMyRole(!revealMyRole)}
+               className={`
+                 relative h-40 rounded-xl cursor-pointer transition-all duration-500 flex flex-col items-center justify-center text-center p-4 border
+                 ${revealMyRole 
+                   ? (isPredator ? 'bg-indigo-900/40 border-indigo-500' : 'bg-red-900/40 border-red-500') 
+                   : 'bg-slate-900 border-slate-700 hover:border-slate-500'}
+               `}
+             >
+               {!revealMyRole ? (
+                 <>
+                   <EyeOff size={32} className="text-slate-500 mb-2" />
+                   <span className="font-bold text-slate-300 uppercase tracking-widest">Tocca per rivelare</span>
+                 </>
+               ) : (
+                 <div className="animate-in zoom-in duration-300">
+                    {isPredator ? <Ghost size={48} className="text-indigo-400 mx-auto mb-2" /> : <ShieldCheck size={48} className="text-red-400 mx-auto mb-2" />}
+                    <h3 className={`text-2xl font-extrabold uppercase ${isPredator ? 'text-indigo-400' : 'text-red-400'}`}>
+                      {isPredator ? 'Predatore' : 'Guardiano'}
+                    </h3>
+                    <p className="text-xs text-slate-300 mt-2">
+                      {isPredator ? 'Caccia di notte. Inganna di giorno.' : 'Proteggi il villaggio. Scopri i predatori.'}
+                    </p>
+                 </div>
+               )}
+             </div>
+             <p className="text-xs text-center text-slate-500 mt-3">Non mostrare questo schermo a nessuno.</p>
+          </Card>
+        </div>
+      </Container>
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // HOST VIEW
+  // ------------------------------------------------------------------
   return (
     <Container className="pb-8">
       <header className="pt-6 mb-6">
@@ -38,7 +94,7 @@ export const BriefingScreen: React.FC = () => {
 
         <div className="bg-slate-900/60 rounded-xl p-4 mb-4 border border-slate-700">
            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-slate-300 font-bold text-sm">Ruoli Assegnati</h4>
+              <h4 className="text-slate-300 font-bold text-sm">Ruoli Assegnati (Solo Master)</h4>
               <button onClick={() => setShowRoles(!showRoles)} className="text-slate-400 hover:text-white">
                   {showRoles ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
@@ -57,15 +113,11 @@ export const BriefingScreen: React.FC = () => {
                </ul>
            ) : (
                <p className="text-xs text-slate-500 italic text-center py-2">
-                   Clicca l'occhio per vedere chi è chi e assegnare le carte corrette (o comunicare il ruolo segretamente).
+                   Clicca l'occhio per vedere i ruoli e distribuire le carte. I giocatori vedono il proprio ruolo sul loro schermo.
                </p>
            )}
         </div>
 
-        <ul className="text-sm text-slate-300 space-y-2 list-disc pl-4 mb-4">
-          <li>Chiama i giocatori uno alla volta o usa le carte fisiche corrispondenti ai ruoli qui sopra.</li>
-          <li>Assicurati che nessuno veda i ruoli degli altri.</li>
-        </ul>
         {activeStep === -1 && (
           <Button 
             onClick={() => setActiveStep(0)} 
